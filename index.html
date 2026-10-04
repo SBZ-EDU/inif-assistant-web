@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>دستیار صندوق نوآوری و شکوفایی — نسخه نمایشی</title>
+<style>
+  :root{--bg:#0b1220;--panel:#101a2c;--line:#243149;--text:#e6edf7;--muted:#8fa2bd;--accent:#4d8dff}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+      font-family:Vazirmatn,Tahoma,"Segoe UI",sans-serif;font-size:14px;line-height:1.9}
+  header{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--panel);
+      border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+  .logo{width:38px;height:38px;border-radius:10px;background:#16294a;color:#bcd3ff;
+      display:flex;align-items:center;justify-content:center;font-weight:700}
+  h1{font-size:15px;margin:0}
+  h1 .en{font-size:11px;color:var(--muted);font-weight:400;direction:ltr;unicode-bidi:isolate}
+  .sub{font-size:11px;color:var(--muted)}
+  .badge{margin-inline-start:auto;font-size:11px;padding:4px 10px;border-radius:999px;
+      background:#132238;border:1px solid var(--line);color:var(--muted)}
+  main{max-width:900px;margin:0 auto;padding:18px;display:flex;flex-direction:column;gap:14px}
+  .row{display:flex;gap:10px}
+  .row.me{justify-content:flex-start;flex-direction:row-reverse}
+  .bubble{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+      padding:12px 14px;white-space:pre-wrap;word-break:break-word;max-width:100%}
+  .row.me .bubble{background:#16294a}
+  .meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .chip{font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+  .chip.ok{color:#9ee8c4;border-color:#255e46}
+  .chip.mid{color:#f0d18a;border-color:#5c4a22}
+  .chip.low{color:#f0a9a9;border-color:#5e2a2a}
+  .chip.src{color:#bcd3ff;border-color:#27406a}
+  .srcs{margin-top:10px;border-top:1px dashed var(--line);padding-top:8px;font-size:11.5px;color:var(--muted)}
+  .followups{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .followups .chip{background:#12203a;cursor:pointer}
+  footer{position:sticky;bottom:0;background:var(--bg);padding:10px 0 16px}
+  .sugg{max-width:900px;margin:0 auto 10px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+  .sugg .chip{cursor:pointer;background:#12203a}
+  .chip-en{color:var(--muted);font-size:10px;margin-inline-start:5px;direction:ltr;unicode-bidi:isolate}
+  .box{max-width:900px;margin:0 auto;display:flex;gap:8px;align-items:center}
+  textarea{flex:1;background:var(--panel);color:var(--text);border:1px solid var(--line);
+      border-radius:12px;padding:10px 12px;font:inherit;resize:none;max-height:140px}
+  button,select{background:#1b2942;color:#cfe0ff;border:1px solid var(--line);border-radius:10px;
+      padding:8px 12px;font:inherit;cursor:pointer}
+  button.send{background:#1d3a6b}
+  button.voice.on{background:#3a2f14;color:#f0d18a;border-color:#5c4a22}
+  .hint{max-width:900px;margin:8px auto 0;font-size:11px;color:var(--muted);text-align:center}
+  .fac-card{background:#0f1c30;border:1px solid #27406a;border-right:3px solid var(--accent);
+      border-radius:12px;padding:10px 12px;margin-top:10px}
+  .fac-card h4{margin:0 0 8px;font-size:13.5px;color:#dff0ff}
+  .fac-grid{display:grid;grid-template-columns:74px 1fr;gap:5px 10px;font-size:12.5px}
+  .fac-grid .k{color:var(--muted)}
+  table.fac{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px}
+  table.fac th,table.fac td{border:1px solid var(--line);padding:6px 8px;text-align:right}
+  table.fac th{background:#132238;color:#cfe0ff}
+  .warn{margin-top:10px;padding:8px 10px;border-radius:10px;background:#3a2f14;
+      border:1px solid #5c4a22;color:#f0d18a;font-size:11.5px}
+  .citebox{margin-top:10px;border-top:1px dashed var(--line);padding-top:8px;font-size:11.5px;color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">ص‌ن</div>
+  <div>
+    <h1>دستیار صندوق نوآوری <span class="en">INIF Assistant</span></h1>
+    <div class="sub">نسخه نمایشی مرورگری · Client-side demo · بدون سرور</div>
+  </div>
+  <div class="badge" id="status">…</div>
+</header>
+
+<main id="log"></main>
+
+<!--
+  وضعیت راه‌اندازی: تا وقتی هستهٔ جست‌وجو (data.js + core.js) نرسیده، کاربر باید
+  *ببیند* چه اتفاقی دارد می‌افتد. پیش از این هیچ حالت بارگذاری و هیچ مدیریت خطایی
+  وجود نداشت: اگر data.js کند یا مسدود بود، اسکریپت با
+  «Cannot read properties of undefined (reading 'stats')» می‌مرد و صفحه بی‌هیچ
+  پیامی از کار می‌افتاد — پرسش کاربر نمایش داده می‌شد ولی پاسخی هرگز نمی‌آمد.
+-->
+<div id="boot" role="status" aria-live="polite"
+     style="margin:14px auto;max-width:760px;padding:12px 16px;border-radius:12px;
+            background:#eef4ff;border:1px solid #c7dbff;color:#12306b;font-size:14px;
+            line-height:1.9;text-align:center">
+  ⏳ در حال بارگذاری پایگاه اسناد… <span class="en">Loading the corpus…</span>
+</div>
+
+<footer>
+  <div class="sugg" id="sugg"></div>
+  <div class="box">
+    <textarea id="input" rows="1" placeholder="پرسش خود را بنویسید… / Ask a question…"></textarea>
+    <button class="voice" id="voiceBtn" title="خواندن پاسخ / Speak">🎙️</button>
+    <button class="send" id="send">ارسال ↵</button>
+  </div>
+  <div class="hint">نسخه نمایشی: همه پردازش‌ها در مرورگر شما انجام می‌شود · پاسخ‌ها فقط از اسناد رسمی · No guessing without a source</div>
+</footer>
+
+<script src="data.js" onerror="window.__INIF_LOAD_ERROR='data.js'"></script>
+<script src="core.js" onerror="window.__INIF_LOAD_ERROR='core.js'"></script>
+<script>
+const log = document.getElementById('log');
+const input = document.getElementById('input');
+const suggBox = document.getElementById('sugg');
+const statusEl = document.getElementById('status');
+const voiceBtn = document.getElementById('voiceBtn');
+let wantVoice = false;
+
+const SUGGESTIONS = [
+  {label:'📊 تسهیلات نمونه‌سازی', en:'Prototyping',  text:'شرایط تسهیلات نمونه‌سازی چیست؟'},
+  {label:'🏦 تولید صنعتی',        en:'Production',   text:'شرایط تسهیلات تولید صنعتی چیست؟'},
+  {label:'🏢 خرید محل کار',       en:'Workspace',    text:'شرایط تسهیلات خرید محل کار چیست؟'},
+  {label:'📄 ضمانت‌نامه',          en:'Guarantee',    text:'ضمانت‌نامه اعتباری تا چه سقفی صادر می‌شود؟'},
+  {label:'⚖️ ماده ۲۴ آیین‌نامه',   en:'Article 24',   text:'ماده ۲۴ آیین‌نامه اجرایی چه می‌گوید؟'},
+  {label:'🧭 مسیر درخواست',       en:'How to apply', text:'برای دریافت تسهیلات از کجا اقدام کنم؟'},
+  {label:'🧰 توانمندسازی',        en:'Enablement',   text:'خدمات توانمندسازی صندوق شامل چه مواردی است؟'},
+  {label:'📋 همه تسهیلات',        en:'All facilities', text:'انواع تسهیلات صندوق چیست؟'}
+];
+
+function el(tag, cls, text){ const n=document.createElement(tag); if(cls) n.className=cls; if(text!==undefined) n.textContent=text; return n; }
+const CONF = {high:['ok','اطمینان بالا'], medium:['mid','اطمینان متوسط'], low:['low','نیازمند تأیید کارشناس']};
+
+function renderSuggestions(){
+  suggBox.innerHTML='';
+  SUGGESTIONS.forEach(item=>{
+    const c = el('span','chip', item.label);
+    c.appendChild(el('span','chip-en', item.en));
+    c.title = item.text + '\nکلیک = متن در کادر ورودی / Click to fill the input';
+    c.onclick = ()=>{ input.value=item.text; input.focus(); input.dispatchEvent(new Event('input')); };
+    suggBox.appendChild(c);
+  });
+}
+
+function stripPlainTable(t){ return t.split('\n').filter(l=>!l.includes(' | ') && !/^─+$/.test(l.trim())).join('\n'); }
+
+function speak(text){
+  if(!('speechSynthesis' in window)) return false;
+  const u = new SpeechSynthesisUtterance(text);
+  const voices = speechSynthesis.getVoices();
+  const fa = voices.find(v => (v.lang||'').toLowerCase().startsWith('fa'));
+  if(fa) u.voice = fa;
+  u.lang = 'fa-IR';
+  u.rate = 0.95;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
+  return true;
+}
+
+function renderFacilities(data, wrap){
+  const facs = data.facilities || [];
+  if(data.mode !== 'facilities' || !facs.length) return false;
+  if(facs.length === 1 && facs[0].ceiling){
+    const f = facs[0], card = el('div','fac-card');
+    card.appendChild(el('h4',null,f.name));
+    const g = el('div','fac-grid');
+    const add=(k,v)=>{ if(!v) return; g.appendChild(el('div','k',k)); g.appendChild(el('div','v',v)); };
+    add('سقف',f.ceiling); add('نرخ',f.rate); add('مدت',f.duration);
+    add('کاربرد',f.purpose); add('شرایط',f.conditions);
+    card.appendChild(g);
+    const m = el('div','citebox');
+    if(f.legal_basis) m.appendChild(el('div',null,'⚖️ مبنای قانونی: '+f.legal_basis));
+    m.appendChild(el('div',null,'📖 منبع: '+f.source+' ('+f.source_date+')'));
+    card.appendChild(m);
+    wrap.appendChild(card);
+  } else {
+    const t = document.createElement('table'); t.className='fac';
+    const head = t.createTHead().insertRow();
+    ['خدمت','سقف','نرخ','مدت'].forEach(h=>{ const c=document.createElement('th'); c.textContent=h; head.appendChild(c); });
+    facs.forEach(f=>{ const r=t.insertRow();
+      [f.name,f.ceiling,f.rate,f.duration].forEach(v=>{ const c=r.insertCell(); c.textContent=v||'—'; }); });
+    wrap.appendChild(t);
+  }
+  wrap.appendChild(el('div','warn','⚠️ نرخ‌ها و سقف‌ها بر پایه فراخوان‌های صندوق به‌روزرسانی می‌شوند؛ پیش از اقدام شرایط روز را در سامانه غزال (ghazal.inif.ir) بررسی کنید.'
+    + (data.registry_date ? ' — آخرین بازبینی: '+data.registry_date : '')));
+  return true;
+}
+
+function addUser(text){
+  const row = el('div','row me'); const b = el('div','bubble',text);
+  row.appendChild(b); log.appendChild(row); window.scrollTo(0, document.body.scrollHeight);
+}
+
+function addBot(data){
+  const row = el('div','row'); const wrap = el('div','bubble');
+  const structured = renderFacilities(data, wrap);
+  wrap.appendChild(el('div',null, structured ? stripPlainTable(data.answer) : data.answer));
+  if(structured && (data.citations||[]).length){
+    const cb = el('div','citebox');
+    cb.appendChild(el('div',null,'📎 مستندات قانونی مرتبط:'));
+    data.citations.slice(0,3).forEach(c=> cb.appendChild(el('div',null,'• ['+c.ref+'] '+c.citation)));
+    wrap.appendChild(cb);
+  }
+  const meta = el('div','meta');
+  const c = CONF[data.confidence] || CONF.low;
+  meta.appendChild(el('span','chip '+c[0], c[1]));
+  meta.appendChild(el('span','chip','حالت: '+data.mode));
+  meta.appendChild(el('span','chip','زمان: '+data.latency_ms+'ms'));
+  (data.citations||[]).forEach(cit=> meta.appendChild(el('span','chip src', cit.citation)));
+  wrap.appendChild(meta);
+
+  if((data.sources||[]).length && data.mode!=='facilities'){
+    const s = el('div','srcs');
+    s.appendChild(el('div',null,'📎 منابع:'));
+    data.sources.forEach(src=> s.appendChild(el('div',null,'• '+src.title+(src.source?' — '+src.source:''))));
+    wrap.appendChild(s);
+  }
+  if((data.followups||[]).length){
+    const f = el('div','followups');
+    data.followups.forEach(q=>{
+      const chip = el('span','chip',q);
+      chip.title = 'کلیک = متن در کادر ورودی / Click to fill the input';
+      chip.onclick = ()=>{ input.value=q; input.focus(); input.dispatchEvent(new Event('input')); };
+      f.appendChild(chip);
+    });
+    wrap.appendChild(f);
+  }
+  if(wantVoice && data.voice_text){
+    if(!speak(data.voice_text)) wrap.appendChild(el('div','srcs','⚠️ مرورگر شما از گفتار فارسی پشتیبانی نمی‌کند.'));
+  }
+  row.appendChild(wrap); log.appendChild(row); window.scrollTo(0, document.body.scrollHeight);
+}
+
+function ask(text){
+  text = (text||'').trim(); if(!text) return;
+  addUser(text); input.value=''; input.style.height='auto';
+  if(!engineReady()){
+    addBot({answer:'⚠️ پایگاه اسناد هنوز بارگذاری نشده است.\n' + bootHint +
+      '\n\nپس از آماده‌شدن، همین پرسش را دوباره بفرستید.',
+      confidence:'low', mode:'loading', latency_ms:0, citations:[], sources:[], followups:[]});
+    return;
+  }
+  // هر خطای زمان‌اجرا باید *دیده* شود؛ پیش‌تر استثنای بی‌صدا صفحه را از کار می‌انداخت
+  try {
+    // مهارت‌های محاسباتی/تحلیلی اول؛ در غیر این صورت پاسخ عادی RAG
+    const sk = window.INIF_CORE.skillRoute(text);
+    const r = sk || window.INIF_CORE.answer(text);
+    addBot(r);
+  } catch (err) {
+    addBot({answer:'⚠️ پردازش این پرسش با خطا مواجه شد: ' + (err && err.message ? err.message : err) +
+      '\n\nلطفاً عبارت را ساده‌تر بپرسید یا صفحه را تازه کنید.',
+      confidence:'low', mode:'error', latency_ms:0, citations:[], sources:[], followups:[]});
+  }
+}
+
+input.addEventListener('input', ()=>{ input.style.height='auto'; input.style.height=Math.min(input.scrollHeight,140)+'px'; });
+input.addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); ask(input.value); } });
+document.getElementById('send').onclick = ()=> ask(input.value);
+voiceBtn.onclick = ()=>{ wantVoice=!wantVoice; voiceBtn.classList.toggle('on',wantVoice);
+  voiceBtn.textContent = wantVoice ? '🔊' : '🎙️'; if(!wantVoice && 'speechSynthesis' in window) speechSynthesis.cancel(); };
+
+function engineReady(){
+  return !!(window.INIF_CORE && typeof window.INIF_CORE.answer === 'function');
+}
+
+let bootHint = 'یک لحظه صبر کنید…';
+
+function setBoot(html, bg, border, color){
+  const b = document.getElementById('boot');
+  if(!b) return;
+  b.style.display = 'block';
+  b.style.background = bg; b.style.borderColor = border; b.style.color = color;
+  b.innerHTML = html;
+}
+
+function hideBoot(){ const b = document.getElementById('boot'); if(b) b.style.display = 'none'; }
+
+function initEngine(){
+  hideBoot();
+  const st = window.INIF_CORE.stats();
+  // همهٔ رقم‌ها فارسی: پیش‌تر فقط واژگان فارسی بود و «95 قطعه · 9 سند · ۱۰٬۷۵۶ واژه»
+  // لاتین و فارسی را در یک نشان قاطی می‌کرد
+  const fa = n => Number(n).toLocaleString('fa-IR');
+  statusEl.textContent = `${fa(st.chunks)} قطعه · ${fa(st.documents)} سند · ${fa(st.vocabulary)} واژه`;
+  renderSuggestions();
+  addBot({answer:'سلام! دستیار صندوق نوآوری و شکوفایی هستم.\nاین نسخه نمایشی کاملاً در مرورگر شما اجرا می‌شود و هیچ داده‌ای به سروری فرستاده نمی‌شود.\nپاسخ‌ها فقط از اسناد رسمی، با ذکر نام سند و شماره ماده.\n\nHi! This demo runs entirely in your browser — nothing is sent to a server.',
+    confidence:'high', mode:'greeting', latency_ms:0, citations:[], sources:[], followups:[]});
+}
+
+function bootFailed(what){
+  const detail = what === 'timeout'
+    ? 'بارگذاری بیش از ۳۰ ثانیه طول کشید.'
+    : `بارگذاری فایل <code>${what}</code> ناموفق بود.`;
+  bootHint = 'پایگاه اسناد بارگذاری نشد. صفحه را تازه کنید.';
+  setBoot(
+    '❌ ' + detail + '<br>پایگاه اسناد (حدود ۳۳۱ کیلوبایت) بارگذاری نشد؛ احتمالاً اتصال کند یا فیلتر است.' +
+    '<br><button onclick="location.reload()" style="margin-top:8px;padding:8px 18px;border-radius:10px;' +
+    'border:1px solid #b91c1c;background:#fff;color:#b91c1c;cursor:pointer;font:inherit">' +
+    'تلاش دوباره / Retry</button>' +
+    '<br><span style="font-size:12px">اگر باز هم نشد، از فیلترشکن استفاده کنید یا ربات بله ' +
+    '<b>@inif_ir_bot</b> را امتحان کنید.</span>',
+    '#fff1f2', '#fecdd3', '#7f1d1d');
+}
+
+// دروازهٔ راه‌اندازی: تا هسته آماده نشده، صفحه «مرده» به نظر نرسد
+(function boot(){
+  if(engineReady()){ initEngine(); return; }
+  if(window.__INIF_LOAD_ERROR){ bootFailed(window.__INIF_LOAD_ERROR); return; }
+  let waited = 0;
+  const timer = setInterval(()=>{
+    waited += 250;
+    if(engineReady()){ clearInterval(timer); initEngine(); }
+    else if(window.__INIF_LOAD_ERROR){ clearInterval(timer); bootFailed(window.__INIF_LOAD_ERROR); }
+    else if(waited >= 30000){ clearInterval(timer); bootFailed('timeout'); }
+  }, 250);
+})();
+
+</script>
+</body>
+</html>

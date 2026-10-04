@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>عیب‌یاب دستیار صندوق — Diagnostics</title>
+<style>
+  body{margin:0;background:#0b1220;color:#e6edf7;font-family:Vazirmatn,Tahoma,"Segoe UI",sans-serif;font-size:15px;line-height:2}
+  .wrap{max-width:780px;margin:0 auto;padding:24px 16px}
+  h1{font-size:20px}
+  .en{color:#8fa2bd;font-size:12px}
+  #rows{margin-top:12px}
+  .row{display:flex;gap:10px;align-items:baseline;padding:8px 12px;border:1px solid #243149;border-radius:10px;margin:8px 0;background:#101a2c}
+  .ok{color:#4ade80}.bad{color:#f87171}.wait{color:#facc15}
+  pre{background:#0f172a;border:1px solid #243149;border-radius:8px;padding:8px;overflow:auto;direction:ltr;text-align:left;font-size:12px}
+  button{padding:10px 18px;border-radius:10px;border:1px solid #4d8dff;background:#14243c;color:#cfe1ff;cursor:pointer;font:inherit;margin-top:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🩺 عیب‌یاب دستیار صندوق <span class="en">Client-side diagnostics</span></h1>
+  <p>این صفحه تک‌تک مراحل را در <b>مرورگر شما</b> آزمایش می‌کند و نتیجه را همین‌جا نشان می‌دهد.
+  اگر سایت «کار نمی‌کند»، از این صفحه اسکرین‌شات بگیرید و بفرستید — دقیقاً می‌گوید کدام مرحله شکسته است.</p>
+  <div id="rows"></div>
+  <pre id="meta"></pre>
+  <button onclick="location.reload()">اجرای دوباره / Retry</button>
+</div>
+
+<script>
+const rows = document.getElementById('rows');
+const meta = document.getElementById('meta');
+function line(name, status, detail){
+  const d = document.createElement('div'); d.className = 'row';
+  const s = status === 'ok' ? '✅' : status === 'bad' ? '❌' : '⏳';
+  d.innerHTML = '';
+  const b = document.createElement('b'); b.className = status; b.textContent = s;
+  const n = document.createElement('span'); n.textContent = ' ' + name;
+  d.appendChild(b); d.appendChild(n);
+  if (detail){ const e = document.createElement('span'); e.className='en'; e.textContent = ' — ' + detail; d.appendChild(e); }
+  rows.appendChild(d);
+  return d;
+}
+const t0 = performance.now();
+
+// اطلاعات محیط مرورگر شما
+meta.textContent =
+  'user-agent: ' + navigator.userAgent + '\n' +
+  'online: ' + navigator.onLine + ' | language: ' + navigator.language + '\n' +
+  'url: ' + location.href + '\n' +
+  'protocol: ' + location.protocol + ' | cookies: ' + navigator.cookieEnabled;
+
+// ۱) آیا HTML رسید؟ (اگر این را می‌بینید، بله)
+line('HTML بارگذاری شد', 'ok', (performance.now()-t0).toFixed(0)+'ms');
+
+// ۲) بارگذاری data.js با زمان‌سنجی و تشخیص خطا
+function loadScript(src){
+  return new Promise(res => {
+    const s = document.createElement('script');
+    const st = performance.now();
+    s.src = src + '?cb=' + Date.now();
+    s.onload = () => res({src, ok:true, ms: Math.round(performance.now()-st)});
+    s.onerror = () => res({src, ok:false, ms: Math.round(performance.now()-st)});
+    document.head.appendChild(s);
+  });
+}
+(async () => {
+  const d = await loadScript('data.js');
+  line('data.js (پایگاه اسناد)', d.ok ? 'ok':'bad', d.ok ? d.ms+'ms · '+ (window.INIF_DATA? (window.INIF_DATA._meta.chunks+' قطعه'):'بدون داده') : 'شکست خورد — شبکه/فیلتر');
+
+  const c = await loadScript('core.js');
+  line('core.js (موتور جست‌وجو)', c.ok ? 'ok':'bad', c.ok ? c.ms+'ms' : 'شکست خورد');
+
+  if (window.INIF_CORE && window.INIF_CORE.answer){
+    try {
+      const a = window.INIF_CORE.answer('شرایط تسهیلات نمونه‌سازی چیست؟');
+      line('پاسخ‌گویی موتور', a.answer && a.answer.length ? 'ok':'bad', 'mode='+a.mode+' · '+ (a.answer||'').length + ' نویسه');
+      const sk = window.INIF_CORE.skillRoute ? window.INIF_CORE.skillRoute('۱۰ میلیارد با سود ۱۱٪ برای ۵ سال قسط ماهانه؟') : null;
+      line('مهارت ماشین‌حساب', sk && sk.mode==='calculator' ? 'ok':'bad', sk ? 'mode='+sk.mode : 'در دسترس نیست');
+    } catch(e){ line('پاسخ‌گویی موتور', 'bad', e.message); }
+  } else {
+    line('پاسخ‌گویی موتور', 'bad', 'INIF_CORE ساخته نشد');
+  }
+  line('پایان', 'ok', ((performance.now()-t0)/1000).toFixed(1)+'s');
+})();
+</script>
+</body>
+</html>
